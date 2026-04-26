@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 224 20% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 20% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 20% 10%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 224 20% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 224 20% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.625rem;
+
+    /* Custom brand colors */
+    --brand-50: 239 246 255;
+    --brand-100: 219 234 254;
+    --brand-500: 59 130 246;
+    --brand-600: 37 99 235;
+    --brand-700: 29 78 216;
+
+    /* Status colors */
+    --status-active: 134 239 172;
+    --status-inactive: 209 213 219;
+    --status-lead: 253 224 71;
+    --status-prospect: 147 197 253;
+    --status-churned: 252 165 165;
+
+    /* Sidebar width */
+    --sidebar-width: 260px;
+  }
+
+  .dark {
+    --background: 224 20% 7%;
+    --foreground: 213 31% 91%;
+    --card: 224 20% 10%;
+    --card-foreground: 213 31% 91%;
+    --popover: 224 20% 10%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 224 20% 14%;
+    --secondary-foreground: 213 31% 91%;
+    --muted: 224 20% 14%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 224 20% 14%;
+    --accent-foreground: 213 31% 91%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 224 20% 18%;
+    --input: 224 20% 18%;
+    --ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    direction: rtl;
+    font-family: 'Heebo', system-ui, sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Fix for FullCalendar RTL */
+  .fc {
+    direction: rtl;
+  }
+  .fc-toolbar-title {
+    font-family: 'Heebo', sans-serif !important;
+    font-weight: 700 !important;
+  }
+  .fc-button {
+    font-family: 'Heebo', sans-serif !important;
+  }
+  .fc-event {
+    border-radius: 6px !important;
+    padding: 2px 6px !important;
+  }
+}
+
+@layer utilities {
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+
+  .glass {
+    backdrop-filter: blur(12px);
+    background: hsl(var(--card) / 0.8);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, hsl(var(--primary)), #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .card-hover {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer;
+  }
+
+  .sidebar-item-active {
+    @apply bg-primary text-primary-foreground shadow-sm;
+  }
+
+  .sidebar-item-inactive {
+    @apply text-muted-foreground hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .stat-card {
+    @apply bg-card rounded-xl border p-5 card-hover;
+  }
+
+  .table-row-hover {
+    @apply hover:bg-muted/50 transition-colors duration-100;
+  }
+
+  /* Priority colors */
+  .priority-urgent { @apply text-red-600 bg-red-50 dark:bg-red-950/30 dark:text-red-400; }
+  .priority-high { @apply text-orange-600 bg-orange-50 dark:bg-orange-950/30 dark:text-orange-400; }
+  .priority-medium { @apply text-yellow-600 bg-yellow-50 dark:bg-yellow-950/30 dark:text-yellow-400; }
+  .priority-low { @apply text-green-600 bg-green-50 dark:bg-green-950/30 dark:text-green-400; }
+
+  /* Status colors */
+  .status-active { @apply text-emerald-700 bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-400; }
+  .status-inactive { @apply text-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-400; }
+  .status-lead { @apply text-amber-700 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400; }
+  .status-prospect { @apply text-blue-700 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400; }
+  .status-churned { @apply text-red-700 bg-red-50 dark:bg-red-950/30 dark:text-red-400; }
+}
