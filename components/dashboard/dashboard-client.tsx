@@ -6,10 +6,10 @@ import {
   TrendingUp, Activity, ChevronLeft, ArrowUpRight
 } from 'lucide-react'
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  AreaChart, Area, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
-import { cn, formatDateTime, formatRelative, clientStatusLabels, taskStatusLabels, activityTypeLabels, formatDate } from '@/lib/utils'
+import { cn, formatDateTime, formatRelative, clientStatusLabels, activityTypeLabels, formatDate, formatHebrewDate } from '@/lib/utils'
 
 interface DashboardClientProps {
   userName: string
@@ -44,6 +44,14 @@ const TASK_STATUS_HE: Record<string, string> = {
 export function DashboardClient({ data, userName }: DashboardClientProps) {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : 'ערב טוב'
+
+  const todayLatin = new Date().toLocaleDateString('he-IL', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  })
+
+  const todayHebrew = new Date().toLocaleDateString('he-IL-u-ca-hebrew', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  })
 
   const statCards = [
     {
@@ -90,9 +98,8 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{greeting}, {userName.split(' ')[0]} 👋</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            {new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
+          <p className="text-muted-foreground text-sm mt-0.5">{todayLatin}</p>
+          <p className="text-muted-foreground text-sm">{todayHebrew}</p>
         </div>
         <Link
           href="/clients/new"
@@ -121,7 +128,6 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Monthly chart */}
         <div className="lg:col-span-2 bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
@@ -159,7 +165,6 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
           </ResponsiveContainer>
         </div>
 
-        {/* Tasks by status pie */}
         <div className="bg-card border rounded-xl p-5">
           <h3 className="font-semibold flex items-center gap-2 mb-4">
             <CheckSquare className="w-4 h-4 text-primary" />
@@ -213,7 +218,6 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
 
       {/* Bottom row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Upcoming meetings */}
         <div className="bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
@@ -251,7 +255,6 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
           )}
         </div>
 
-        {/* Inactive clients */}
         <div className="bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
@@ -287,7 +290,6 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
           )}
         </div>
 
-        {/* Recent activity */}
         <div className="bg-card border rounded-xl p-5">
           <h3 className="font-semibold flex items-center gap-2 mb-4">
             <Activity className="w-4 h-4 text-primary" />
