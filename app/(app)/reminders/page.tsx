@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, Plus, Check, X, Clock, Calendar, User, CheckSquare } from 'lucide-react'
-import { cn, formatDateTime, formatRelative, reminderTypeLabels } from '@/lib/utils'
+import { Bell, Plus, Check, X, Clock, Calendar, User, CheckSquare, Edit } from 'lucide-react'
+import { cn, formatDateTime, reminderTypeLabels } from '@/lib/utils'
 import { toast } from 'sonner'
 import { ReminderFormDialog } from '@/components/reminders/reminder-form-dialog'
 import Link from 'next/link'
@@ -18,6 +18,7 @@ export default function RemindersPage() {
   const [reminders, setReminders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
+  const [editReminder, setEditReminder] = useState<any>(null)
   const [filter, setFilter] = useState<'all' | 'unread' | 'upcoming'>('all')
 
   const fetchReminders = async () => {
@@ -73,7 +74,6 @@ export default function RemindersPage() {
 
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">תזכורות</h1>
@@ -91,7 +91,6 @@ export default function RemindersPage() {
         </button>
       </div>
 
-      {/* Filter tabs */}
       <div className="flex gap-2 border-b pb-1">
         {[
           { key: 'all', label: 'הכל' },
@@ -132,7 +131,6 @@ export default function RemindersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Overdue */}
           {overdueReminders.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-red-600 mb-2 flex items-center gap-1.5">
@@ -146,6 +144,7 @@ export default function RemindersPage() {
                     reminder={r}
                     onAction={handleAction}
                     onDelete={handleDelete}
+                    onEdit={setEditReminder}
                     overdue
                   />
                 ))}
@@ -153,7 +152,6 @@ export default function RemindersPage() {
             </div>
           )}
 
-          {/* Upcoming */}
           {upcomingReminders.length > 0 && (
             <div>
               <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
@@ -167,6 +165,7 @@ export default function RemindersPage() {
                     reminder={r}
                     onAction={handleAction}
                     onDelete={handleDelete}
+                    onEdit={setEditReminder}
                   />
                 ))}
               </div>
@@ -180,14 +179,27 @@ export default function RemindersPage() {
         onClose={() => setCreateOpen(false)}
         onSuccess={(r) => { setReminders(rs => [r, ...rs]); setCreateOpen(false) }}
       />
+
+      {editReminder && (
+        <ReminderFormDialog
+          open={!!editReminder}
+          initialData={editReminder}
+          onClose={() => setEditReminder(null)}
+          onSuccess={(updated) => {
+            setReminders(rs => rs.map(r => r.id === updated.id ? updated : r))
+            setEditReminder(null)
+          }}
+        />
+      )}
     </div>
   )
 }
 
-function ReminderCard({ reminder, onAction, onDelete, overdue }: {
+function ReminderCard({ reminder, onAction, onDelete, onEdit, overdue }: {
   reminder: any
   onAction: (id: string, action: 'read' | 'dismiss') => void
   onDelete: (id: string) => void
+  onEdit: (reminder: any) => void
   overdue?: boolean
 }) {
   const Icon = TYPE_ICONS[reminder.type] || Bell
@@ -240,6 +252,13 @@ function ReminderCard({ reminder, onAction, onDelete, overdue }: {
       </div>
 
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <button
+          onClick={() => onEdit(reminder)}
+          className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground"
+          title="עריכה"
+        >
+          <Edit className="w-4 h-4" />
+        </button>
         {!reminder.isRead && (
           <button
             onClick={() => onAction(reminder.id, 'read')}
