@@ -8,7 +8,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // ─── Date Utilities ───────────────────────────────────────────────────────────
-
+export function formatHebrewDate(date: Date | string | null | undefined): string {
+  if (!date) return '—'
+  const d = new Date(date)
+  return d.toLocaleDateString('he-IL-u-ca-hebrew', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return '—'
   return format(new Date(date), 'dd/MM/yyyy', { locale: he })
