@@ -1,32 +1,95 @@
-import { redirect } from 'next/navigation'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { Sidebar } from '@/components/layout/sidebar'
-import { Topbar } from '@/components/layout/topbar'
-import { ReminderChecker } from '@/components/reminders/reminder-checker'
+import prisma from '@/lib/prisma'
 
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const session = await getServerSession(authOptions)
-  if (!session) {
-    redirect('/login')
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: 'לא מורשה' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { action } = body
+
+    const existing = await prisma.reminder.findFirst({
+      where: { id: params.id, userId: session.user.id },
+    })
+    if (!existing) {
+      return NextResponse.json({ message: 'תזכורת לא נמצאה' }, { status: 404 })
+    }
+
+    const reminder = await prisma.reminder.update({
+      where: { id: params.id },
+      data: {
+        ...(action === 'read' && { isRead: true }),
+        ...(action === 'dismiss' && { isDismissed: true, isRead: true }),
+      },
+    })
+
+    return NextResponse.json(reminder)
+  } catch (error) {
+    return NextResponse.json({ message: 'שגיאת שרת' }, { status: 500 })
   }
+}
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar user={session.user} />
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Topbar user={session.user} />
-        <ReminderChecker />
-        <main className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-          <div className="max-w-[1600px] mx-auto animate-fade-in">
-            {children}
-          </div>
-        </main>
-      </div>
-    </div>
-  )
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: 'לא מורשה' }, { status: 401 })
+    }
+
+    const existing = await prisma.reminder.findFirst({
+      where: { id: params.id, userId: session.user.id },
+    })
+    if (!existing) {
+      return NextResponse.json({ message: 'תזכורת לא נמצאה' }, { status: 404 })
+    }
+
+    const body = await request.json()
+    const { title, description, type, remindAt, clientId } = body
+
+    const reminder = await prisma.reminder.update({
+      where: { id: params.id },
+      data: {
+        title,
+        description: description || null,
+        type,
+        remindAt: new Date(remindAt),
+        clientId: clientId || null,
+      },
+    })
+
+    return NextResponse.json(reminder)
+  } catch (error) {
+    return NextResponse.json({ message: 'שגיאת שרת' }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.id) {
+      return NextResponse.json({ message: 'לא מורשה' }, { status: 401 })
+    }
+
+    await prisma.reminder.deleteMany({
+      where: { id: params.id, userId: session.user.id },
+    })
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ message: 'שגיאת שרת' }, { status: 500 })
+  }
 }
