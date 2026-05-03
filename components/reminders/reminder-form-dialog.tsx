@@ -105,26 +105,4 @@ export function ReminderFormDialog({ open, onClose, onSuccess, initialData }: Re
         <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
           <div>
             <label className="text-xs font-medium text-muted-foreground block mb-1">כותרת *</label>
-            <input {...register('title')} placeholder="תזכורת..." className={inp(!!errors.title)} />
-            {errors.title && <p className="text-destructive text-xs mt-1">{errors.title.message}</p>}
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">תיאור</label>
-            <textarea {...register('description')} rows={2} placeholder="פרטים נוספים..." className={cn(inp(), 'resize-none')} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">סוג</label>
-              <select {...register('type')} className={inp()}>
-                <option value="CUSTOM">מותאם אישית</option>
-                <option value="TASK">משימה</option>
-                <option value="MEETING">פגישה</option>
-                <option value="CLIENT">לקוח</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground block mb-1">לקוח</label>
-              <select {...register('clientId')} className={inp()}>
-                <option value="">ללא לקוח</option>
+            <input {...register('title')} placeholder="תזכורת..." className={inp(!!errors.t
