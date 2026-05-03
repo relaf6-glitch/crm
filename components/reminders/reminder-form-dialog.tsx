@@ -26,19 +26,31 @@ interface ReminderFormDialogProps {
   initialData?: any
 }
 
-export function ReminderFormDialog({ open, onClose, onSuccess, initialData }: ReminderFormDialogProps) {
+export function ReminderFormDialog({
+  open,
+  onClose,
+  onSuccess,
+  initialData,
+}: ReminderFormDialogProps) {
   const [loading, setLoading] = useState(false)
   const [clients, setClients] = useState<any[]>([])
   const isEdit = !!initialData
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { type: 'CUSTOM' },
   })
 
   useEffect(() => {
     if (open) {
-      fetch('/api/clients?limit=100').then(r => r.json()).then(d => setClients(d.clients || []))
+      fetch('/api/clients?limit=100')
+        .then((r) => r.json())
+        .then((d) => setClients(d.clients || []))
       if (initialData) {
         reset({
           title: initialData.title,
@@ -62,7 +74,9 @@ export function ReminderFormDialog({ open, onClose, onSuccess, initialData }: Re
   const onSubmit = async (data: FormData) => {
     setLoading(true)
     try {
-      const url = isEdit ? `/api/reminders/${initialData.id}` : '/api/reminders'
+      const url = isEdit
+        ? `/api/reminders/${initialData.id}`
+        : '/api/reminders'
       const method = isEdit ? 'PUT' : 'POST'
       const res = await fetch(url, {
         method,
@@ -86,23 +100,6 @@ export function ReminderFormDialog({ open, onClose, onSuccess, initialData }: Re
 
   if (!open) return null
 
-  const inp = (err?: boolean) => cn(
-    'w-full px-3 py-2 rounded-xl border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all',
-    err && 'border-destructive'
-  )
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-card border rounded-2xl shadow-2xl w-full max-w-md animate-fade-in">
-        <div className="flex items-center justify-between p-5 border-b">
-          <h2 className="text-lg font-bold">{isEdit ? 'עריכת תזכורת' : 'תזכורת חדשה'}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-accent text-muted-foreground">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground block mb-1">כותרת *</label>
-            <input {...register('title')} placeholder="תזכורת..." className={inp(!!errors.t
+  const inp = (err?: boolean) =>
+    cn(
+      'w-full px-3 py-2 rounded-xl border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20
