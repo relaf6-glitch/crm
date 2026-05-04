@@ -125,7 +125,7 @@ export function Sidebar({ user }: SidebarProps) {
             )}
           </div>
           <button
-            onClick={() => signOut({ callbackUrl: '/login' })}
+            onClick={async () => { await signOut({ callbackUrl: '/login', redirect: true }) }}
             className={cn(
               'sidebar-item sidebar-item-inactive w-full mt-1 text-destructive hover:text-destructive hover:bg-destructive/10',
               !sidebarOpen && 'justify-center px-2'
