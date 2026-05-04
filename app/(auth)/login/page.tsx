@@ -46,38 +46,30 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" dir="rtl">
-      {/* Right side - Image */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+    <div className="min-h-screen relative flex items-center justify-center" dir="rtl">
+      {/* Background image - full screen */}
+      <div className="absolute inset-0">
         <img
           src="/secretary.jpg"
           alt="המזכירה"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
-          <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
-          <h1 className="text-6xl font-bold text-yellow-400 drop-shadow-lg" style={{ fontFamily: 'serif' }}>
-            המזכירה
-          </h1>
-          <p className="text-white/80 text-lg mt-3">מערכת ניהול מקצועית</p>
-          <div className="mt-4 w-24 h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent" />
-        </div>
+        <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      {/* Left side - Login form */}
-      <div className="w-full lg:w-1/2 bg-zinc-950 flex items-center justify-center p-8">
-        <div className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8">
-            <h1 className="text-4xl font-bold text-yellow-400 mb-2" style={{ fontFamily: 'serif' }}>
-              המזכירה
-            </h1>
-            <p className="text-zinc-400 text-sm">מערכת ניהול מקצועית</p>
-          </div>
+      {/* Top left title */}
+      <div className="absolute top-8 right-8 z-10">
+        <h1 className="text-4xl font-bold text-yellow-400 drop-shadow-lg" style={{ fontFamily: 'serif' }}>
+          המזכירה
+        </h1>
+        <p className="text-white/70 text-sm mt-1">מערכת ניהול מקצועית</p>
+        <div className="mt-2 w-16 h-px bg-gradient-to-l from-transparent via-yellow-400 to-transparent" />
+      </div>
 
-          <div className="mb-8">
+      {/* Login form - center */}
+      <div className="relative z-10 w-full max-w-sm mx-4">
+        <div className="bg-black/70 backdrop-blur-md border border-zinc-700 rounded-2xl p-8 shadow-2xl">
+          <div className="mb-6">
             <h2 className="text-2xl font-bold text-white mb-1">כניסה למערכת</h2>
             <p className="text-zinc-400 text-sm">ברוכים השבים</p>
           </div>
@@ -91,7 +83,7 @@ export default function LoginPage() {
                 placeholder="name@example.com"
                 dir="ltr"
                 className={cn(
-                  'w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-sm',
+                  'w-full px-4 py-3 rounded-xl bg-zinc-900/80 border border-zinc-700 text-white text-sm',
                   'focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400/50 transition-all',
                   'placeholder:text-zinc-600',
                   errors.email && 'border-red-500'
@@ -108,7 +100,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="הזן סיסמה"
                   className={cn(
-                    'w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-700 text-white text-sm',
+                    'w-full px-4 py-3 rounded-xl bg-zinc-900/80 border border-zinc-700 text-white text-sm',
                     'focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400/50 transition-all',
                     'placeholder:text-zinc-600 pe-10',
                     errors.password && 'border-red-500'
