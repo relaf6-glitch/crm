@@ -49,7 +49,7 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   })
 
-  const todayHebrew = new Date().toLocaleDateString('he-IL-u-ca-hebrew', {
+ const todayHebrew = new Date().toLocaleDateString('he-IL-u-ca-hebrew-nu-hebr', {
     year: 'numeric', month: 'long', day: 'numeric'
   })
 
