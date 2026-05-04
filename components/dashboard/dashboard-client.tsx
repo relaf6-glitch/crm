@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { HDate } from '@hebcal/core'
 import {
   Users, CheckSquare, AlertTriangle, Clock, Calendar,
   TrendingUp, Activity, ChevronLeft, ArrowUpRight
@@ -9,7 +10,7 @@ import {
   AreaChart, Area, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
-import { cn, formatDateTime, formatRelative, clientStatusLabels, activityTypeLabels, formatDate, formatHebrewDate } from '@/lib/utils'
+import { cn, formatDateTime, formatRelative, formatDate } from '@/lib/utils'
 
 interface DashboardClientProps {
   userName: string
@@ -41,6 +42,21 @@ const TASK_STATUS_HE: Record<string, string> = {
   CANCELLED: 'בוטל',
 }
 
+const HEBREW_MONTHS = ['ניסן','אייר','סיון','תמוז','אב','אלול','תשרי','חשון','כסלו','טבת','שבט','אדר','אדר ב']
+const HEBREW_NUMBERS = ['','א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ז׳','ח׳','ט׳','י׳','י״א','י״ב','י״ג','י״ד','ט״ו','ט״ז','י״ז','י״ח','י״ט','כ׳','כ״א','כ״ב','כ״ג','כ״ד','כ״ה','כ״ו','כ״ז','כ״ח','כ״ט','ל׳']
+
+function getHebrewDate(): string {
+  try {
+    const hd = new HDate(new Date())
+    const day = HEBREW_NUMBERS[hd.getDate()] || hd.getDate().toString()
+    const month = HEBREW_MONTHS[hd.getMonth() - 1] || ''
+    const year = hd.renderGematriya()
+    return `${day} ב${month} ${year}`
+  } catch {
+    return ''
+  }
+}
+
 export function DashboardClient({ data, userName }: DashboardClientProps) {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : 'ערב טוב'
@@ -49,9 +65,7 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   })
 
- const todayHebrew = new Date().toLocaleDateString('he-IL-u-ca-hebrew-nu-hebr', {
-    year: 'numeric', month: 'long', day: 'numeric'
-  })
+  const todayHebrew = getHebrewDate()
 
   const statCards = [
     {
@@ -94,12 +108,11 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{greeting}, {userName.split(' ')[0]} 👋</h1>
           <p className="text-muted-foreground text-sm mt-0.5">{todayLatin}</p>
-          <p className="text-muted-foreground text-sm">{todayHebrew}</p>
+          {todayHebrew && <p className="text-muted-foreground text-sm">{todayHebrew}</p>}
         </div>
         <Link
           href="/clients/new"
@@ -109,7 +122,6 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
         </Link>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card) => (
           <Link key={card.title} href={card.href} className="stat-card group">
@@ -126,7 +138,6 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
         ))}
       </div>
 
-      {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
@@ -197,10 +208,7 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
                 {data.tasksByStatus.map((entry) => (
                   <div key={entry.status} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ background: TASK_STATUS_COLORS[entry.status] }}
-                      />
+                      <div className="w-2 h-2 rounded-full" style={{ background: TASK_STATUS_COLORS[entry.status] }} />
                       <span className="text-muted-foreground">{TASK_STATUS_HE[entry.status]}</span>
                     </div>
                     <span className="font-semibold">{entry.count}</span>
@@ -216,7 +224,6 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
         </div>
       </div>
 
-      {/* Bottom row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="bg-card border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
@@ -234,19 +241,12 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
             <div className="space-y-2">
               {data.upcomingMeetings.map(meeting => (
                 <div key={meeting.id} className="flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div
-                    className="w-1 h-10 rounded-full shrink-0 mt-0.5"
-                    style={{ background: meeting.color || '#6366f1' }}
-                  />
+                  <div className="w-1 h-10 rounded-full shrink-0 mt-0.5" style={{ background: meeting.color || '#6366f1' }} />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{meeting.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDateTime(meeting.startTime)}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{formatDateTime(meeting.startTime)}</p>
                     {meeting.client && (
-                      <p className="text-xs text-primary mt-0.5">
-                        {meeting.client.firstName} {meeting.client.lastName}
-                      </p>
+                      <p className="text-xs text-primary mt-0.5">{meeting.client.firstName} {meeting.client.lastName}</p>
                     )}
                   </div>
                 </div>
@@ -270,19 +270,13 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
           ) : (
             <div className="space-y-2">
               {data.inactiveClients.map(client => (
-                <Link
-                  key={client.id}
-                  href={`/clients/${client.id}`}
-                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors"
-                >
+                <Link key={client.id} href={`/clients/${client.id}`} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors">
                   <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-950/30 text-orange-600 flex items-center justify-center text-xs font-bold shrink-0">
                     {client.firstName[0]}{client.lastName[0]}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{client.firstName} {client.lastName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {client.lastContact ? formatRelative(client.lastContact) : 'אף פעם'}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{client.lastContact ? formatRelative(client.lastContact) : 'אף פעם'}</p>
                   </div>
                 </Link>
               ))}
@@ -304,12 +298,8 @@ export function DashboardClient({ data, userName }: DashboardClientProps) {
                   <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{log.title}</p>
-                    {log.description && (
-                      <p className="text-xs text-muted-foreground truncate">{log.description}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground/60 mt-0.5">
-                      {formatRelative(log.createdAt)}
-                    </p>
+                    {log.description && <p className="text-xs text-muted-foreground truncate">{log.description}</p>}
+                    <p className="text-xs text-muted-foreground/60 mt-0.5">{formatRelative(log.createdAt)}</p>
                   </div>
                 </div>
               ))}
