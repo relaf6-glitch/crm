@@ -40,7 +40,7 @@ export default function LoginPage() {
         toast.error('שגיאת התחברות', { description: 'אימייל או סיסמה שגויים' })
       } else {
         toast.success('התחברת בהצלחה!')
-        router.push('/dashboard')
+        window.location.href = '/dashboard'
         router.refresh()
       }
     } catch {
