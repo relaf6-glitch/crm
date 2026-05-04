@@ -50,8 +50,7 @@ function getHebrewDate(): string {
     const hd = new HDate(new Date())
     const day = HEBREW_NUMBERS[hd.getDate()] || hd.getDate().toString()
     const month = HEBREW_MONTHS[hd.getMonth() - 1] || ''
-    const year = hd.renderGematriya()
-    return `${day} ב${month} ${year}`
+ return hd.renderGematriya(true)
   } catch {
     return ''
   }
