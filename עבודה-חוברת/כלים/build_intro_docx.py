@@ -1,60 +1,21 @@
 # -*- coding: utf-8 -*-
-# קובץ וורד: המבוא המעודכן + ארבע הצעות השינוי, לעיון המחבר
-import re
+# קובץ וורד: המבוא המעודכן + ארבע הצעות השינוי, לעיון המחבר (RTL טבעי)
+import re, sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from docx import Document
-from docx.shared import Pt
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+from rtl_docx import apply_base_styles, make_rtl, set_section_rtl, add_page_number_footer, qa_report
 
 BASE = "/home/user/crm/עבודה-חוברת"
 OUT = BASE + "/תוצר/מבוא-והצעות-שינוי-לאישור.docx"
 FILES = [BASE + "/מבוא/מבוא-מעודכן.md", BASE + "/מבוא/שינויי-מבוא.md"]
 
-BIDI_SUCCESSORS = (
-    'w:adjustRightInd', 'w:snapToGrid', 'w:spacing', 'w:ind',
-    'w:contextualSpacing', 'w:mirrorIndents', 'w:suppressOverlap', 'w:jc',
-    'w:textDirection', 'w:textAlignment', 'w:textboxTightWrap',
-    'w:outlineLvl', 'w:divId', 'w:cnfStyle', 'w:rPr', 'w:sectPr', 'w:pPrChange',
-)
-
-def insert_bidi(pPr):
-    bidi = pPr.find(qn('w:bidi'))
-    if bidi is None:
-        bidi = OxmlElement('w:bidi')
-        pPr.insert_element_before(bidi, *BIDI_SUCCESSORS)
-    bidi.set(qn('w:val'), '1')
-
 doc = Document()
+apply_base_styles(doc, [('Heading 1', 20), ('Heading 2', 16), ('Heading 3', 14), ('List Bullet', 12)])
+set_section_rtl(doc.sections[0])
+add_page_number_footer(doc.sections[0])
 
-def set_rtl_style(style, size=None, bold=None):
-    style.font.name = "David"
-    r = style.element.get_or_add_rPr()
-    rf = r.find(qn('w:rFonts'))
-    if rf is None:
-        rf = OxmlElement('w:rFonts'); r.insert(0, rf)
-    rf.set(qn('w:ascii'), 'David'); rf.set(qn('w:hAnsi'), 'David'); rf.set(qn('w:cs'), 'David')
-    if size:
-        style.font.size = Pt(size)
-        szCs = OxmlElement('w:szCs'); szCs.set(qn('w:val'), str(int(size*2))); r.append(szCs)
-    if bold:
-        style.font.bold = True
-        bCs = OxmlElement('w:bCs'); bCs.set(qn('w:val'), '1'); r.append(bCs)
-    try:
-        insert_bidi(style.element.get_or_add_pPr())
-    except AttributeError:
-        pass
-
-set_rtl_style(doc.styles['Normal'], size=12)
-for h, s in [('Heading 1', 20), ('Heading 2', 16), ('Heading 3', 14)]:
-    set_rtl_style(doc.styles[h], size=s, bold=True)
-
-def make_rtl(p, align=WD_ALIGN_PARAGRAPH.RIGHT):
-    p.alignment = align
-    insert_bidi(p._p.get_or_add_pPr())
-    for run in p.runs:
-        rPr = run._r.get_or_add_rPr()
-        rtl = OxmlElement('w:rtl'); rtl.set(qn('w:val'), '1'); rPr.append(rtl)
 
 def add_runs(p, text):
     text = re.sub(r'\[\^([^\]]+)\]', r'[\1]', text)
@@ -65,20 +26,10 @@ def add_runs(p, text):
         elif part:
             p.add_run(part)
 
-def add_paragraph(text, style=None):
-    p = doc.add_paragraph(style=style)
-    add_runs(p, text)
-    make_rtl(p)
-    return p
 
-# מספור עמודים בתחתית
-section = doc.sections[0]
-footer_p = section.footer.paragraphs[0]
-footer_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-insert_bidi(footer_p._p.get_or_add_pPr())
-fld = OxmlElement('w:fldSimple'); fld.set(qn('w:instr'), ' PAGE \\* MERGEFORMAT ')
-fr = OxmlElement('w:r'); ft = OxmlElement('w:t'); ft.text = '1'; fr.append(ft); fld.append(fr)
-footer_p._p.append(fld)
+def add_paragraph(text, style=None):
+    p = doc.add_paragraph(style=style); add_runs(p, text); make_rtl(p); return p
+
 
 first = True
 for f in FILES:
@@ -102,16 +53,4 @@ for f in FILES:
 
 doc.save(OUT)
 print('נשמר:', OUT)
-
-from docx import Document as D2
-d = D2(OUT)
-content = [p for p in d.paragraphs if p.text.strip()]
-bad = 0
-for p in content:
-    pPr = p._p.find(qn('w:pPr'))
-    ok = pPr is not None and pPr.find(qn('w:bidi')) is not None and p.alignment in (WD_ALIGN_PARAGRAPH.RIGHT, WD_ALIGN_PARAGRAPH.CENTER)
-    ch = [c.tag for c in (pPr if pPr is not None else [])]
-    if ok and qn('w:jc') in ch and ch.index(qn('w:bidi')) > ch.index(qn('w:jc')):
-        ok = False
-    if not ok: bad += 1
-print('פסקאות:', len(content), '| חריגות:', bad)
+print('בקרה:', qa_report(OUT))

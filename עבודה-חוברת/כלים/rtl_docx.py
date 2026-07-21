@@ -1,0 +1,132 @@
+# -*- coding: utf-8 -*-
+"""
+מודול הרכבה משותף לקובצי וורד בעברית מיושרים לימין.
+
+כלל היישום (הכלל הקבוע מכאן ולהבא):
+פסקה בעברית מסומנת RTL באמצעות w:bidi בלבד, ואיננה מקבלת w:jc="right".
+הסיבה: בפסקה מסוג RTL, מנועי תצוגה מודרניים (גוגל דוקס, מציגים ניידים,
+תצוגות מבוססות ובכללן הפרשנות ה"קפדנית" של OOXML) קוראים את הערך "right"
+באופן לוגי כ"end", וקצה השורה בכתיבה מימין לשמאל הוא הצד השמאלי, ולכן
+הטקסט נצמד לשמאל. פסקת bidi ללא jc נצמדת מאליה לתחילת השורה, שהיא הצד הימני,
+וכל המנועים מסכימים על כך. jc מפורש נשמור רק למרכוז (center), שאין בו
+עמימות ימין/שמאל.
+"""
+from docx.shared import Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+
+# אלמנטים שמותר להם לבוא אחרי w:bidi בתוך w:pPr, לפי סדר הסכמה של OOXML
+_BIDI_SUCCESSORS = (
+    'w:adjustRightInd', 'w:snapToGrid', 'w:spacing', 'w:ind',
+    'w:contextualSpacing', 'w:mirrorIndents', 'w:suppressOverlap', 'w:jc',
+    'w:textDirection', 'w:textAlignment', 'w:textboxTightWrap',
+    'w:outlineLvl', 'w:divId', 'w:cnfStyle', 'w:rPr', 'w:sectPr', 'w:pPrChange',
+)
+
+
+def insert_bidi(pPr):
+    b = pPr.find(qn('w:bidi'))
+    if b is None:
+        b = OxmlElement('w:bidi')
+        pPr.insert_element_before(b, *_BIDI_SUCCESSORS)
+    b.set(qn('w:val'), '1')
+    return b
+
+
+def _remove_jc(pPr):
+    jc = pPr.find(qn('w:jc'))
+    if jc is not None:
+        pPr.remove(jc)
+
+
+def set_rtl_style(style, size=None, bold=None):
+    style.font.name = "David"
+    r = style.element.get_or_add_rPr()
+    rf = r.find(qn('w:rFonts'))
+    if rf is None:
+        rf = OxmlElement('w:rFonts'); r.insert(0, rf)
+    rf.set(qn('w:ascii'), 'David'); rf.set(qn('w:hAnsi'), 'David'); rf.set(qn('w:cs'), 'David')
+    if size:
+        style.font.size = Pt(size)
+        szCs = r.find(qn('w:szCs'))
+        if szCs is None:
+            szCs = OxmlElement('w:szCs'); r.append(szCs)
+        szCs.set(qn('w:val'), str(int(size * 2)))
+    if bold:
+        style.font.bold = True
+        bCs = r.find(qn('w:bCs'))
+        if bCs is None:
+            bCs = OxmlElement('w:bCs'); r.append(bCs)
+        bCs.set(qn('w:val'), '1')
+    try:
+        pPr = style.element.get_or_add_pPr()
+        insert_bidi(pPr)
+        _remove_jc(pPr)  # יישור טבעי לימין בירושה, בלי jc עמים
+    except AttributeError:
+        pass
+
+
+def apply_base_styles(doc, headings):
+    """headings: רשימת (שם סגנון, גודל) להחלת גופן David ו-RTL."""
+    set_rtl_style(doc.styles['Normal'], size=12)
+    for h, s in headings:
+        try:
+            set_rtl_style(doc.styles[h], size=s, bold=(h != 'List Bullet'))
+        except KeyError:
+            pass
+
+
+def make_rtl(p, center=False):
+    """מסמן פסקה כ-RTL. center=True בלבד מוסיף jc; אחרת יישור ימין טבעי."""
+    pPr = p._p.get_or_add_pPr()
+    insert_bidi(pPr)
+    if center:
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER  # מרכוז סימטרי, ללא עמימות
+    else:
+        _remove_jc(pPr)                          # יישור ימין טבעי של RTL
+    for run in p.runs:
+        rPr = run._r.get_or_add_rPr()
+        rtl = rPr.find(qn('w:rtl'))
+        if rtl is None:
+            rtl = OxmlElement('w:rtl'); rPr.append(rtl)
+        rtl.set(qn('w:val'), '1')
+    return p
+
+
+def set_section_rtl(section):
+    sectPr = section._sectPr
+    if sectPr.find(qn('w:bidi')) is None:
+        sectPr.append(OxmlElement('w:bidi'))
+
+
+def add_page_number_footer(section):
+    fp = section.footer.paragraphs[0]
+    insert_bidi(fp._p.get_or_add_pPr())
+    fp.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    fld = OxmlElement('w:fldSimple'); fld.set(qn('w:instr'), ' PAGE \\* MERGEFORMAT ')
+    fr = OxmlElement('w:r')
+    frPr = OxmlElement('w:rPr')
+    frf = OxmlElement('w:rFonts')
+    frf.set(qn('w:ascii'), 'David'); frf.set(qn('w:hAnsi'), 'David'); frf.set(qn('w:cs'), 'David')
+    frPr.append(frf); fr.append(frPr)
+    ft = OxmlElement('w:t'); ft.text = '1'; fr.append(ft)
+    fld.append(fr); fp._p.append(fld)
+
+
+def qa_report(path):
+    """בקרה: כל פסקת תוכן חייבת bidi; ואסור jc=right/left בפסקת RTL."""
+    from docx import Document
+    d = Document(path)
+    content = [p for p in d.paragraphs if p.text.strip()]
+    no_bidi = bad_jc = 0
+    for p in content:
+        pPr = p._p.find(qn('w:pPr'))
+        if pPr is None or pPr.find(qn('w:bidi')) is None:
+            no_bidi += 1; continue
+        jc = pPr.find(qn('w:jc'))
+        if jc is not None and jc.get(qn('w:val')) in ('right', 'left', 'start', 'end'):
+            bad_jc += 1  # ערך יישור עמים בפסקת RTL
+    foot_ok = bool(d.sections) and 'PAGE' in d.sections[0].footer.paragraphs[0]._p.xml
+    return {'paragraphs': len(content), 'no_bidi': no_bidi,
+            'ambiguous_jc': bad_jc, 'page_field': foot_ok}
