@@ -77,9 +77,10 @@ def apply_base_styles(doc, headings):
             pass
 
 
-# ברירת המחדל ליישור פסקאות הגוף. 'right' = יישור ימין טבעי (בלי jc);
-# 'both' = יישור דו-צדדי (justify), ערך חד-משמעי הבטוח גם בוורד בנייד.
-BODY_ALIGN = 'both'
+# ברירת המחדל ליישור פסקאות הגוף. 'right' = יישור ימין טבעי (בלי jc), אושר
+# כתקין בוורד בנייד. 'both' = יישור דו-צדדי (justify); התגלה כמצויר שגוי
+# (ג'יבריש) בוורד בנייד, ולכן איננו ברירת המחדל.
+BODY_ALIGN = 'right'
 
 
 def make_rtl(p, center=False, align=None):
