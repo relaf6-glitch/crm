@@ -27,8 +27,8 @@ def add_runs(p, text):
             p.add_run(part)
 
 
-def add_paragraph(text, style=None):
-    p = doc.add_paragraph(style=style); add_runs(p, text); make_rtl(p); return p
+def add_paragraph(text, style=None, center=False):
+    p = doc.add_paragraph(style=style); add_runs(p, text); make_rtl(p, center=center); return p
 
 
 for line in open(SRC, encoding='utf-8').read().splitlines():
@@ -36,9 +36,9 @@ for line in open(SRC, encoding='utf-8').read().splitlines():
     if not s.strip() or s.strip() == '---':
         continue
     if s.startswith('## '):
-        add_paragraph(s[3:], style='Heading 2')
+        add_paragraph(s[3:], style='Heading 2', center=True)
     elif s.startswith('# '):
-        add_paragraph(s[2:], style='Heading 1')
+        add_paragraph(s[2:], style='Heading 1', center=True)
     else:
         add_paragraph(s)
 

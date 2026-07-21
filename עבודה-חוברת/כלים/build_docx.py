@@ -42,7 +42,7 @@ st.runs[0].font.size = Pt(16)
 doc.add_page_break()
 
 # תוכן עניינים ידני
-toc_h = doc.add_paragraph(style='Heading 1'); add_runs(toc_h, 'תוכן העניינים'); make_rtl(toc_h)
+toc_h = doc.add_paragraph(style='Heading 1'); add_runs(toc_h, 'תוכן העניינים'); make_rtl(toc_h, center=True)
 toc_items = ['מבוא']
 for f in FILES[1:]:
     first = open(f, encoding='utf-8').readline().strip()
@@ -57,12 +57,12 @@ for f in FILES:
         if not s.strip() or s.strip() == '---':
             continue
         if s.startswith('### '):
-            add_paragraph(s[4:], style='Heading 3')
+            add_paragraph(s[4:], style='Heading 3', center=True)
         elif s.startswith('## '):
-            add_paragraph(s[3:], style='Heading 2')
+            add_paragraph(s[3:], style='Heading 2', center=True)
         elif s.startswith('# '):
             doc.add_page_break()
-            add_paragraph(s[2:], style='Heading 1')
+            add_paragraph(s[2:], style='Heading 1', center=True)
         elif s.startswith('- '):
             add_paragraph(s[2:], style='List Bullet')
         elif re.match(r'\[\^[^\]]+\]:', s):

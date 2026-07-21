@@ -77,14 +77,27 @@ def apply_base_styles(doc, headings):
             pass
 
 
-def make_rtl(p, center=False):
-    """מסמן פסקה כ-RTL. center=True בלבד מוסיף jc; אחרת יישור ימין טבעי."""
+# ברירת המחדל ליישור פסקאות הגוף. 'right' = יישור ימין טבעי (בלי jc);
+# 'both' = יישור דו-צדדי (justify), ערך חד-משמעי הבטוח גם בוורד בנייד.
+BODY_ALIGN = 'both'
+
+
+def make_rtl(p, center=False, align=None):
+    """מסמן פסקה כ-RTL.
+    center=True  -> מרכוז (jc=center), לכותרות.
+    align='both' -> יישור דו-צדדי (justify).
+    align='right'/None -> יישור ימין טבעי, בלי jc.
+    אם align לא נמסר, נגזר מ-BODY_ALIGN."""
     pPr = p._p.get_or_add_pPr()
     insert_bidi(pPr)
     if center:
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER  # מרכוז סימטרי, ללא עמימות
     else:
-        _remove_jc(pPr)                          # יישור ימין טבעי של RTL
+        eff = align or BODY_ALIGN
+        if eff == 'both':
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY  # jc=both, חד-משמעי
+        else:
+            _remove_jc(pPr)                           # יישור ימין טבעי של RTL
     for run in p.runs:
         rPr = run._r.get_or_add_rPr()
         rtl = rPr.find(qn('w:rtl'))

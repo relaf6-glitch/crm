@@ -28,8 +28,8 @@ def add_runs(p, text):
             p.add_run(part)
 
 
-def add_paragraph(text, style=None):
-    p = doc.add_paragraph(style=style); add_runs(p, text); make_rtl(p); return p
+def add_paragraph(text, style=None, center=False):
+    p = doc.add_paragraph(style=style); add_runs(p, text); make_rtl(p, center=center); return p
 
 
 first = True
@@ -42,11 +42,11 @@ for f in FILES:
         if not s.strip() or s.strip() == '---':
             continue
         if s.startswith('### '):
-            add_paragraph(s[4:], style='Heading 3')
+            add_paragraph(s[4:], style='Heading 3', center=True)
         elif s.startswith('## '):
-            add_paragraph(s[3:], style='Heading 2')
+            add_paragraph(s[3:], style='Heading 2', center=True)
         elif s.startswith('# '):
-            add_paragraph(s[2:], style='Heading 1')
+            add_paragraph(s[2:], style='Heading 1', center=True)
         elif s.startswith('- '):
             add_paragraph(s[2:], style='List Bullet')
         else:
