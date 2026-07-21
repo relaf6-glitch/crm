@@ -100,6 +100,33 @@ def set_section_rtl(section):
         sectPr.append(OxmlElement('w:bidi'))
 
 
+def set_doc_defaults_rtl(doc):
+    """מוסיף w:bidi ו-w:rtl לברירת המחדל של המסמך (docDefaults),
+    כדי שגם וורד בנייד, הקורא את ברירות המחדל תחילה, יתחיל מ-RTL."""
+    styles = doc.styles.element  # w:styles
+    dd = styles.find(qn('w:docDefaults'))
+    if dd is None:
+        dd = OxmlElement('w:docDefaults'); styles.insert(0, dd)
+    # ברירת מחדל לפסקה
+    pdd = dd.find(qn('w:pPrDefault'))
+    if pdd is None:
+        pdd = OxmlElement('w:pPrDefault'); dd.append(pdd)
+    ppr = pdd.find(qn('w:pPr'))
+    if ppr is None:
+        ppr = OxmlElement('w:pPr'); pdd.append(ppr)
+    if ppr.find(qn('w:bidi')) is None:
+        ppr.insert(0, OxmlElement('w:bidi'))
+    # ברירת מחדל לריצה
+    rdd = dd.find(qn('w:rPrDefault'))
+    if rdd is None:
+        rdd = OxmlElement('w:rPrDefault'); dd.append(rdd)
+    rpr = rdd.find(qn('w:rPr'))
+    if rpr is None:
+        rpr = OxmlElement('w:rPr'); rdd.append(rpr)
+    if rpr.find(qn('w:rtl')) is None:
+        rpr.append(OxmlElement('w:rtl'))
+
+
 def add_page_number_footer(section):
     fp = section.footer.paragraphs[0]
     insert_bidi(fp._p.get_or_add_pPr())

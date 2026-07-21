@@ -7,7 +7,7 @@ from docx.shared import Pt
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from rtl_docx import (apply_base_styles, make_rtl, insert_bidi,
-                      set_section_rtl, add_page_number_footer, qa_report)
+                      set_section_rtl, set_doc_defaults_rtl, add_page_number_footer, qa_report)
 
 BASE = "/home/user/crm/עבודה-חוברת"
 OUT = BASE + "/תוצר/חוברת-מדינה-יהודית-בעלת-תוכן.docx"
@@ -16,6 +16,7 @@ FILES = [BASE + "/מבוא/מבוא-מעודכן.md"] + sorted(glob.glob(BASE + 
 doc = Document()
 apply_base_styles(doc, [('Heading 1', 20), ('Heading 2', 16), ('Heading 3', 14),
                         ('Title', 26), ('List Bullet', 12)])
+set_doc_defaults_rtl(doc)
 set_section_rtl(doc.sections[0])
 add_page_number_footer(doc.sections[0])
 
