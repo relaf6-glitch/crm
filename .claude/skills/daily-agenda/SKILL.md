@@ -125,6 +125,12 @@ description: >-
 6. סכם: "בוצעו X, חלקית Y, נשארו פתוחות Z — יתגלגלו למחר." שמור את הקובץ,
    וקומיט את `current.md`, הארכיון והאקסל.
 
+7. **מסור למשתמש את האקסל.** אחרי הקומיט:
+   - שלח את הקובץ בצ'אט עם `SendUserFile` (display attach) לצפייה/הורדה מהנייד.
+   - תן קישור GitHub קבוע לגרסה העדכנית:
+     `https://github.com/relaf6-glitch/crm/blob/claude/daily-task-management-skill-crttxz/.claude/skills/daily-agenda/state/activity-log.xlsx`
+     (עדכן את שם הענף אם השתנה/מוזג ל-main).
+
 ---
 
 ## אקסל פעילות (`state/activity-log.xlsx`)
