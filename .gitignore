@@ -8,7 +8,7 @@ node_modules/
 out/
 
 # Prisma
-prisma/migrations/
+# Note: prisma/migrations/ MUST be version-controlled for reproducible deploys.
 
 # Environment
 .env
