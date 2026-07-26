@@ -20,7 +20,21 @@ if [ -z "${DIRECT_URL:-}" ]; then
 fi
 
 echo "Running prisma migrate deploy..."
-prisma migrate deploy
+MIGRATE_ERR="$(mktemp)"
+if ! prisma migrate deploy 2> "$MIGRATE_ERR"; then
+  cat "$MIGRATE_ERR" >&2
+  if grep -q "P3005" "$MIGRATE_ERR"; then
+    # Existing (non-empty) schema without Prisma migration history — e.g. created
+    # earlier with `prisma db push`. Baseline the init migration as already applied.
+    # This only writes to the _prisma_migrations table; it does not alter any data.
+    echo "P3005: existing schema detected — baselining 0_init as already applied..."
+    prisma migrate resolve --applied 0_init
+    prisma migrate deploy
+  else
+    echo "prisma migrate deploy failed (not P3005)." >&2
+    exit 1
+  fi
+fi
 
 echo "Building Next.js..."
 next build
