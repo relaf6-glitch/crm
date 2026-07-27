@@ -2,7 +2,10 @@
 
 Work through this list for every agreement and include each item that is
 relevant to the deal. Not every deal needs every section, but you must
-consciously decide, not forget. Numbering and exact titles adapt to the deal.
+consciously decide, not forget. Exact titles adapt to the deal. Number the
+clauses with a single flat running integer sequence (1, 2, 3 through to the end
+of the agreement), never decimal numbering such as 1.1 or 2.3; sub items inside
+a clause take Hebrew letters (א), (ב), (ג). See `rtl-docx.md`.
 
 ## Front matter
 - Title that names the deal type accurately (for example הסכם שיתוף פעולה, ייזום וחלוקת רווחים).

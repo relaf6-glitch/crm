@@ -13,6 +13,21 @@ These documents are unforgiving. Follow this exactly, and use
     (`soffice --headless --convert-to pdf <file>`), then `pdftoppm -jpeg -r 90 -f 1 -l 1 file.pdf out` and view the image.
   - read the text back for a dash check: `extract-text <file>` or `pandoc`.
 
+## Standing formatting conventions
+
+These are fixed defaults for every document, unless the user overrides them:
+
+- **Body text is justified** (`AlignmentType.JUSTIFIED`, יישור דו צדדי), so both
+  edges of the paragraph are straight. Headings stay right aligned.
+- **Flat running numbering.** Number the main clauses with a single running
+  integer sequence that runs through the whole agreement: 1, 2, 3, and so on.
+  Do NOT use decimal numbering such as 1.1, 1.2, 2.1. Use one `counter()` from
+  `build_rtl_docx.js` for the whole document and feed `n()` to each heading.
+  Sub items inside a clause, when needed, take Hebrew letters in parentheses,
+  (א), (ב), (ג), via the `heb()` helper, not a second number.
+- **Page numbers at the bottom, centered.** `buildDoc` already adds a centered
+  footer field (עמוד X מתוך Y). Keep it on every document.
+
 ## Core RTL rules for body text
 
 - Every paragraph needs `bidirectional: true`.
@@ -22,7 +37,9 @@ These documents are unforgiving. Follow this exactly, and use
   `rightToLeft: false`, so digits do not get reordered inside Hebrew.
 - Headings align right (`AlignmentType.RIGHT`); body paragraphs are justified
   (`AlignmentType.JUSTIFIED`); numbered clauses use a hanging indent
-  `indent: { start, hanging }` so the clause number sits to the right.
+  `indent: { start, hanging }` so the clause number sits to the right. Clause
+  numbers are flat running integers (1, 2, 3), never decimal (see the standing
+  conventions above).
 
 ## The two traps that waste the most time
 
