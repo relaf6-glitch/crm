@@ -43,3 +43,7 @@ yarn-error.log*
 # Build
 build/
 dist/
+
+# Python cache
+__pycache__/
+*.pyc
