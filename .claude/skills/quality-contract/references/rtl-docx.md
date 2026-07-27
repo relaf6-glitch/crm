@@ -1,0 +1,81 @@
+# Building right to left Hebrew Word documents
+
+These documents are unforgiving. Follow this exactly, and use
+`scripts/build_rtl_docx.js` for the helpers.
+
+## Environment
+
+- Use the `docx` npm library (version 9 or later) with Node. Install if needed:
+  `npm install docx`.
+- Build with `node build.js`, then always:
+  - validate: `python /mnt/skills/public/docx/scripts/office/validate.py <file>` (path may differ outside this environment; if absent, skip).
+  - render one page to confirm right alignment: convert to PDF with LibreOffice
+    (`soffice --headless --convert-to pdf <file>`), then `pdftoppm -jpeg -r 90 -f 1 -l 1 file.pdf out` and view the image.
+  - read the text back for a dash check: `extract-text <file>` or `pandoc`.
+
+## Core RTL rules for body text
+
+- Every paragraph needs `bidirectional: true`.
+- Every text run needs `rightToLeft: true` and a Hebrew safe font, usually
+  `Arial` (or `David` if asked).
+- Put numbers and any Latin content in a **separate run** with
+  `rightToLeft: false`, so digits do not get reordered inside Hebrew.
+- Headings align right (`AlignmentType.RIGHT`); body paragraphs are justified
+  (`AlignmentType.JUSTIFIED`); numbered clauses use a hanging indent
+  `indent: { start, hanging }` so the clause number sits to the right.
+
+## The two traps that waste the most time
+
+1. **Do not set an explicit right alignment together with bidi on the same
+   paragraph.** In LibreOffice a paragraph that carries both `bidi` and an
+   explicit `jc="right"` renders flipped to the left. Rely on `bidi` at the
+   paragraph level and at the section (sectPr) level, and let alignment be
+   right or justified as above without forcing `jc="right"` in raw XML. When you
+   build with the `docx` library and set `alignment: AlignmentType.RIGHT` plus
+   `bidirectional: true`, it renders correctly; the trap is mainly when hand
+   writing XML.
+
+2. **Always verify actual right alignment on a rendered page before
+   delivering.** Do not trust the code; render and look, or measure the pixel
+   position of the text edges.
+
+## Page setup
+
+- Portrait Letter: `size: { width: 12240, height: 15840 }`.
+- Portrait A4: `size: { width: 11906, height: 16838 }`.
+- **Landscape: set the width and height directly with width greater than
+  height, and do NOT include an `orientation` field.** Passing the orientation
+  enum causes the library to swap width and height and you end up in portrait.
+  Landscape A4 is `size: { width: 16838, height: 11906 }`.
+
+## Tables (for example the client questions document)
+
+Right to left tables are the hardest part.
+
+- **Do not use `visuallyRightToLeft: true` on the table.** In LibreOffice it
+  clips content and pushes the first column off the page edge.
+- Instead **reverse the column order manually**: the rightmost logical column
+  becomes the first cell in each row, and the leftmost logical column becomes
+  the last. Build the header row and every data row in this reversed visual
+  order, and reverse the column widths array to match.
+- Set the table `alignment: AlignmentType.RIGHT` so it anchors to the right
+  margin with any slack on the left.
+- Use `layout: TableLayoutType.FIXED` with an explicit `columnWidths` array.
+- Each cell paragraph is `bidirectional: true` with right or center alignment;
+  each run is `rightToLeft: true`, font Arial.
+- A section header row spanning all columns is one cell with `columnSpan` equal
+  to the number of columns.
+- Keep the total table width a little under the usable page width so nothing
+  clips at the edge.
+
+## Dash check
+
+Before delivering, confirm there are no dashes anywhere. Extract the text and
+grep for em dash, en dash, and hyphen between word characters. Rephrase to
+remove any that appear. See `style.md`.
+
+## Delivering
+
+Copy the final file to the output directory and present it. For a formal
+deliverable use docx; for lighter internal notes markdown is fine. Offer a PDF
+if useful.
