@@ -52,6 +52,9 @@ phase you are in rather than working from memory, because the technical details
   from one client's interest and risk perspective. Keep internal analysis
   (assumptions, open issues, audit) separate from the counterparty facing
   contract, so internal reasoning is never sent to the other side.
+- **Standing formatting.** Body text is justified (יישור דו צדדי); clauses are
+  numbered with a single flat running integer sequence (1, 2, 3), never decimal
+  (1.1, 1.2); page numbers sit at the bottom, centered. See `references/rtl-docx.md`.
 
 ## The workflow at a glance
 
