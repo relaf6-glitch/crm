@@ -14,6 +14,33 @@ Hebrew מקף, the em dash, and the en dash. Rephrase to avoid them. Examples:
 Before delivering any document, extract the text and search for em dash, en
 dash, and a hyphen sitting between two word characters. If any appear, rewrite.
 
+## Clause numbering, a standing rule of the same force
+
+The number goes **before the clause body, never on the heading**, and the period
+comes **after** the number: "11." and never ".11". Treat this exactly as you
+treat the no dashes rule.
+
+- The clause title is a bold, unnumbered line. The running number opens the body
+  paragraph that follows it:
+
+  ```
+  הכספים, ייעודם והשליטה בהם
+  7.  כל התרומות שיגויסו בקמפיין יתקבלו בחשבון הבנק של חותם ...
+  ```
+
+- **Never put the period inside the digits' run.** Digits go in their own LTR run
+  (`rightToLeft: false`) containing digits only; the period and the spacing go in
+  the RTL run that follows. A period left inside the LTR run resolves away from
+  the digits and renders before the number, producing ".11".
+- Numbering is flat (1, 2, 3) through the whole document, never decimal. Sub
+  items take Hebrew letters in parentheses, and the parentheses, the letter and
+  the spacing all live in a single RTL run, otherwise they invert.
+- Cross reference other clauses by their subject, not by number. It keeps the
+  numbering free to change and avoids dashes in clause ranges.
+
+Before delivering, confirm in the file structure that every numbered clause is
+built from those two runs and that no heading carries a number.
+
 ## Legal register
 
 Write confident, declarative legal Hebrew. In the contract, prefer firm,

@@ -104,7 +104,59 @@ def make_rtl(p, center=False, align=None):
         rtl = rPr.find(qn('w:rtl'))
         if rtl is None:
             rtl = OxmlElement('w:rtl'); rPr.append(rtl)
+        elif rtl.get(qn('w:val')) in ('0', 'false'):
+            continue  # ריצה שסומנה במפורש LTR (למשל ספרות מספור) נשמרת כפי שהיא
         rtl.set(qn('w:val'), '1')
+    return p
+
+
+def _set_run_rtl(run, rtl=True):
+    rPr = run._r.get_or_add_rPr()
+    el = rPr.find(qn('w:rtl'))
+    if el is None:
+        el = OxmlElement('w:rtl'); rPr.append(el)
+    el.set(qn('w:val'), '1' if rtl else '0')
+    return run
+
+
+def add_clause_title(doc, text, size=None):
+    """כותרת סעיף: מודגשת ובלא מספר. המספר שייך לגוף הסעיף, לא לכותרת."""
+    p = doc.add_paragraph()
+    run = p.add_run(text); run.bold = True
+    if size:
+        run.font.size = Pt(size)
+    bCs = OxmlElement('w:bCs'); bCs.set(qn('w:val'), '1')
+    run._r.get_or_add_rPr().append(bCs)
+    make_rtl(p, align='right')
+    return p
+
+
+def add_numbered_clause(doc, num, text, bold=False):
+    """סעיף ממוספר, לפי כלל המספור הקבוע.
+
+    המספר בא לפני גוף הסעיף (ולא על הכותרת), והנקודה באה אחרי המספר, "11."
+    ולא ".11". לשם כך הספרות יושבות בריצת LTR נפרדת, והנקודה והרווחים בריצת
+    RTL הבאה אחריה. נקודה שנשארת בתוך ריצת הספרות נסחפת ומוצגת לפני המספר.
+    """
+    p = doc.add_paragraph()
+    _set_run_rtl(p.add_run(str(num)), rtl=False)   # ספרות בלבד, LTR
+    _set_run_rtl(p.add_run('.  '), rtl=True)  # נקודה ורווחים, RTL
+    body = p.add_run(text)
+    if bold:
+        body.bold = True
+        bCs = OxmlElement('w:bCs'); bCs.set(qn('w:val'), '1')
+        body._r.get_or_add_rPr().append(bCs)
+    _set_run_rtl(body, rtl=True)
+    make_rtl(p)
+    return p
+
+
+def add_letter_item(doc, letter, text):
+    """תת סעיף באות עברית. הסוגריים, האות והרווחים כולם בריצת RTL אחת."""
+    p = doc.add_paragraph()
+    _set_run_rtl(p.add_run('(%s)  ' % letter), rtl=True)
+    _set_run_rtl(p.add_run(text), rtl=True)
+    make_rtl(p)
     return p
 
 

@@ -22,9 +22,19 @@ These are fixed defaults for every document, unless the user overrides them:
 - **Flat running numbering.** Number the main clauses with a single running
   integer sequence that runs through the whole agreement: 1, 2, 3, and so on.
   Do NOT use decimal numbering such as 1.1, 1.2, 2.1. Use one `counter()` from
-  `build_rtl_docx.js` for the whole document and feed `n()` to each heading.
-  Sub items inside a clause, when needed, take Hebrew letters in parentheses,
-  (א), (ב), (ג), via the `heb()` helper, not a second number.
+  `build_rtl_docx.js` for the whole document. Sub items inside a clause, when
+  needed, take Hebrew letters in parentheses, (א), (ב), (ג), via the `heb()`
+  helper, not a second number.
+- **The number goes on the clause body, not on the heading, and the period
+  follows the number.** Use `h(title)` for the bold unnumbered heading and
+  `clause(n(), text)` for the numbered body. This is a standing rule with the
+  same force as the no dashes rule.
+- **The period must never share a run with the digits.** `clause()` builds the
+  paragraph from an LTR run holding digits only, followed by an RTL run holding
+  the period and the spacing, then the RTL text run. If the period is left in the
+  digits' LTR run it resolves away from them and renders as ".11". Hebrew letter
+  sub items (`letterItem()`) keep the parentheses, the letter and the spacing in
+  a single RTL run for the same reason.
 - **Page numbers at the bottom, centered.** `buildDoc` already adds a centered
   footer field (עמוד X מתוך Y). Keep it on every document.
 

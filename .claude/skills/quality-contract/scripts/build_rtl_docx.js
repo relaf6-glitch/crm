@@ -43,28 +43,62 @@ function counter(start = 1) {
 const _HEB = 'אבגדהוזחטיכלמנסעפצקרשת';
 function heb(i) { return _HEB[(i - 1) % _HEB.length]; }
 
-// Numbered clause with hanging indent. level controls the indent depth.
-// For the running scheme pass a single integer at level 1 (n()), and Hebrew
-// letters at level 2 for sub items; avoid decimal numbers such as "1.1".
-const START = { 1: 567, 2: 1191, 3: 1815 };
-function cl(num, text, level = 1) {
-  const kids = [];
-  if (num) kids.push(rn(num + '\u00A0\u00A0'));
-  kids.push(r(text));
+// STANDING NUMBERING RULE (same force as the no dashes rule):
+// the running number goes on the clause BODY, never on the heading, and the
+// period comes AFTER the number ("11." and never ".11").
+// The period must never share a run with the digits: digits go in an LTR run of
+// their own, and the period plus spacing go in the RTL run that follows. A
+// period left inside the digits' LTR run resolves away from them and renders
+// before the number.
+const START = { 1: 624, 2: 1191, 3: 1815 };
+
+// Numbered clause body. Pass the next integer from counter(): clause(n(), text).
+function clause(num, text, level = 1, o = {}) {
   return new Paragraph({
     bidirectional: true, alignment: AlignmentType.JUSTIFIED,
-    spacing: { after: 120, line: 288 },
-    indent: { start: START[level] || 567, hanging: 567 },
-    children: kids,
+    spacing: { after: 130, line: 288 },
+    indent: { start: START[level] || 624, hanging: 624 },
+    children: [rn(String(num)), r('.\u00A0\u00A0'), r(text, o.run || {})],
   });
 }
 
-// Section heading, right aligned.
-function h(num, text) {
+// Hebrew letter sub item. The parentheses, the letter and the spacing all stay
+// inside one RTL run, otherwise they invert.
+function letterItem(letter, text, level = 2) {
   return new Paragraph({
-    bidirectional: true, alignment: AlignmentType.RIGHT,
-    spacing: { before: 260, after: 110 }, keepNext: true,
-    children: [rn(num + '.\u00A0\u00A0', { bold: true, size: HEAD }), r(text, { bold: true, size: HEAD })],
+    bidirectional: true, alignment: AlignmentType.JUSTIFIED,
+    spacing: { after: 120, line: 288 },
+    indent: { start: START[level] || 1191, hanging: 567 },
+    children: [r('(' + letter + ')\u00A0\u00A0'), r(text)],
+  });
+}
+
+// Backward compatible wrapper. Digits route to clause(); anything else, such as
+// an already formed "(\u05D0)", is treated as a Hebrew letter sub item.
+function cl(num, text, level = 1) {
+  if (num == null || num === '') {
+    return new Paragraph({
+      bidirectional: true, alignment: AlignmentType.JUSTIFIED,
+      spacing: { after: 120, line: 288 },
+      indent: { start: START[level] || 624, hanging: 624 },
+      children: [r(text)],
+    });
+  }
+  const s = String(num);
+  if (/^\d+$/.test(s)) return clause(s, text, level);
+  return letterItem(s.replace(/[()]/g, ''), text, level === 1 ? 2 : level);
+}
+
+// Section heading: bold, unnumbered. No explicit jc; bidi yields right
+// alignment and avoids the LibreOffice flip. Accepts h(text), and tolerates the
+// legacy h(num, text) form by ignoring the number, since numbers belong on the
+// clause body.
+function h(text, maybeText) {
+  const title = maybeText === undefined ? text : maybeText;
+  return new Paragraph({
+    bidirectional: true,
+    spacing: { before: 240, after: 70 }, keepNext: true,
+    children: [r(title, { bold: true, size: HEAD })],
   });
 }
 
@@ -127,24 +161,26 @@ async function write(doc, path) {
 module.exports = {
   Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle,
   FONT, BODY, HEAD, TITLE, PAGE,
-  r, rn, cl, h, recital, def, p, counter, heb, buildDoc, write,
+  r, rn, cl, clause, letterItem, h, recital, def, p, counter, heb, buildDoc, write,
 };
 
 // Tiny demo when run directly: node build_rtl_docx.js
-// Shows the standing conventions: justified body, flat running numbering
-// (1, 2, 3 ...) with Hebrew letter sub items, and a centered page number footer.
+// Shows the standing conventions: justified body, unnumbered bold headings with
+// the flat running number opening the clause BODY and the period after the
+// number, Hebrew letter sub items, and a centered page number footer.
 if (require.main === module) {
   const D = [];
   const n = counter();
-  D.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [r('הסכם לדוגמה', { bold: true, size: TITLE })] }));
-  D.push(h(n(), 'מבוא'));
-  D.push(p('מבוא זה מדגים פסקת גוף ביישור דו צדדי, כך שקצות השורות ישרים בשני הצדדים, בעברית מלאה מימין לשמאל, וכל הסכום נקוב במספרים תקינים בסך 1,000,000 ש"ח.'));
-  D.push(h(n(), 'הגדרות'));
+  D.push(new Paragraph({ bidirectional: true, alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [r('הסכם לדוגמה', { bold: true, size: TITLE })] }));
+  D.push(h('מבוא'));
+  D.push(clause(n(), 'מבוא זה מדגים פסקת גוף ביישור דו צדדי, כך שקצות השורות ישרים בשני הצדדים, והמספר הרץ פותח את גוף הסעיף והנקודה באה אחריו.'));
+  D.push(h('הגדרות'));
   D.push(def('הצדדים', 'הבעלים והיזם יחד.'));
-  D.push(h(n(), 'התמורה'));
-  D.push(cl('(' + heb(1) + ')', 'התמורה תשולם בשני תשלומים שווים.', 2));
-  D.push(cl('(' + heb(2) + ')', 'כל תשלום ישולם בתוך שלושים יום ממועד הדרישה.', 2));
-  D.push(h(n(), 'הפרות ותרופות'));
-  D.push(p('הצד המפר יפצה את הצד הנפגע בגין כל נזק שנגרם, בנוסף לכל תרופה אחרת על פי דין.'));
+  D.push(h('התמורה'));
+  D.push(clause(n(), 'התמורה תשולם בשני תשלומים שווים, כמפורט להלן.'));
+  D.push(letterItem(heb(1), 'התשלום הראשון במועד החתימה.'));
+  D.push(letterItem(heb(2), 'התשלום השני בתוך שלושים יום ממועד הדרישה.'));
+  D.push(h('הפרות ותרופות'));
+  D.push(clause(n(), 'הצד המפר יפצה את הצד הנפגע בגין כל נזק שנגרם, בנוסף לכל תרופה אחרת על פי דין.'));
   write(buildDoc(D, { page: 'letter', headerText: 'מסמך לדוגמה' }), '/tmp/demo_rtl.docx').then(b => console.log('wrote', b, 'bytes to /tmp/demo_rtl.docx'));
 }

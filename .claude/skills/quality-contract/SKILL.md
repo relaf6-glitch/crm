@@ -33,6 +33,14 @@ phase you are in rather than working from memory, because the technical details
 - **No dashes of any kind.** In all output (Hebrew and otherwise) avoid every
   hyphen and dash (מקף, em dash, en dash). Rephrase instead. This is a hard,
   standing rule. See `references/style.md`.
+- **Clause numbering: the number goes before the clause body, never on the
+  heading, and the period follows the number ("11." and never ".11").** This
+  carries the same standing force as the no dashes rule. The clause title is a
+  bold unnumbered line; the running number opens the body paragraph. Technically
+  the digits sit in their own LTR run and the period plus spacing sit in the RTL
+  run that follows, because a period left inside the digits' LTR run drifts and
+  renders before the number. See `references/style.md` and
+  `references/rtl-docx.md`.
 - **Never fabricate.** No invented facts, sums, dates, agreements, or legal
   citations. If a figure or authority is not in the source material, leave a
   clearly marked blank or flag it. Verify legal citations with high confidence
