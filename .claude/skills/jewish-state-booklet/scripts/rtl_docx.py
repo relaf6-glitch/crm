@@ -119,6 +119,36 @@ def _set_run_rtl(run, rtl=True):
     return run
 
 
+import re as _re
+
+# אסימון מספרי: חייב להיסתיים בספרה, באחוז או בסוגר סוגר, כדי שנקודת סוף משפט
+# לא תיסחף לתוך ריצת ה-LTR. זו אותה תקלה שיוצרת ".11" במקום "11.".
+_NUM_TOKEN = _re.compile(r'\(?\d(?:[\d.,:/]*\d)?%?\)?')
+
+
+def add_mixed_runs(p, text, bold=False):
+    """מוסיף את הטקסט לפסקה, כשכל אסימון מספרי עובר לריצת LTR משלו.
+
+    בתוך ריצת RTL הסוגריים מתהפכות וסימן האחוז או מפריד האלפים נודד, ולכן כל
+    מספר מבודד לריצה נפרדת.
+    """
+    pos = 0
+    for m in _NUM_TOKEN.finditer(str(text)):
+        if m.start() > pos:
+            run = p.add_run(str(text)[pos:m.start()])
+            if bold:
+                run.bold = True
+            _set_run_rtl(run, rtl=True)
+        _set_run_rtl(p.add_run(m.group(0)), rtl=False)
+        pos = m.end()
+    if pos < len(str(text)):
+        run = p.add_run(str(text)[pos:])
+        if bold:
+            run.bold = True
+        _set_run_rtl(run, rtl=True)
+    return p
+
+
 def add_clause_title(doc, text, size=None):
     """כותרת סעיף: מודגשת ובלא מספר. המספר שייך לגוף הסעיף, לא לכותרת."""
     p = doc.add_paragraph()
@@ -141,12 +171,7 @@ def add_numbered_clause(doc, num, text, bold=False):
     p = doc.add_paragraph()
     _set_run_rtl(p.add_run(str(num)), rtl=False)   # ספרות בלבד, LTR
     _set_run_rtl(p.add_run('.  '), rtl=True)  # נקודה ורווחים, RTL
-    body = p.add_run(text)
-    if bold:
-        body.bold = True
-        bCs = OxmlElement('w:bCs'); bCs.set(qn('w:val'), '1')
-        body._r.get_or_add_rPr().append(bCs)
-    _set_run_rtl(body, rtl=True)
+    add_mixed_runs(p, text, bold=bold)
     make_rtl(p)
     return p
 
@@ -155,7 +180,7 @@ def add_letter_item(doc, letter, text):
     """תת סעיף באות עברית. הסוגריים, האות והרווחים כולם בריצת RTL אחת."""
     p = doc.add_paragraph()
     _set_run_rtl(p.add_run('(%s)  ' % letter), rtl=True)
-    _set_run_rtl(p.add_run(text), rtl=True)
+    add_mixed_runs(p, text)
     make_rtl(p)
     return p
 

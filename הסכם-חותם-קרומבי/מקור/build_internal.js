@@ -2,8 +2,8 @@
 const path = require('path');
 const {
   Paragraph, AlignmentType, TITLE,
-  r, heb, hh, letterItem, buildDoc, write,
-} = require(path.join(__dirname, 'helpers.js'));
+  r, heb, h, letterItem, buildDoc, write,
+} = require('/home/user/crm/.claude/skills/quality-contract/scripts/build_rtl_docx.js');
 
 const D = [];
 
@@ -46,7 +46,7 @@ const sections = [
 ];
 
 for (const [title, items] of sections) {
-  D.push(hh(title));
+  D.push(h(title));
   items.forEach((t, i) => D.push(letterItem(heb(i + 1), t)));
 }
 

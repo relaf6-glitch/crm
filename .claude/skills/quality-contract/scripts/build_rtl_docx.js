@@ -43,6 +43,28 @@ function counter(start = 1) {
 const _HEB = 'אבגדהוזחטיכלמנסעפצקרשת';
 function heb(i) { return _HEB[(i - 1) % _HEB.length]; }
 
+// Automatic bidi safe splitting of Hebrew text that contains numerals.
+// Inside an RTL run a numeral is fine on its own, but parentheses mirror and a
+// percent sign or a thousands separator drifts, so every numeric token is moved
+// into an LTR run of its own. The token must end in a digit, a percent sign or a
+// closing parenthesis, so a sentence ending period is never swallowed into the
+// LTR run (that is the same defect that renders ".11" instead of "11.").
+const NUM_TOKEN = /\(?\d(?:[\d.,:/]*\d)?%?\)?/g;
+
+function splitMixed(text, o = {}) {
+  const s = String(text);
+  const out = [];
+  let last = 0;
+  s.replace(NUM_TOKEN, (m, idx) => {
+    if (idx > last) out.push(r(s.slice(last, idx), o));
+    out.push(rn(m, o));
+    last = idx + m.length;
+    return m;
+  });
+  if (last < s.length) out.push(r(s.slice(last), o));
+  return out.length ? out : [r(s, o)];
+}
+
 // STANDING NUMBERING RULE (same force as the no dashes rule):
 // the running number goes on the clause BODY, never on the heading, and the
 // period comes AFTER the number ("11." and never ".11").
@@ -59,7 +81,7 @@ const START = { 1: 624, 2: 1191, 3: 1815 };
 // Inside an RTL run parentheses mirror and a percent sign drifts, so keep any
 // such token in its own LTR run.
 function clause(num, text, level = 1, o = {}) {
-  const body = Array.isArray(text) ? text : [r(text, o.run || {})];
+  const body = Array.isArray(text) ? text : splitMixed(text, o.run || {});
   return new Paragraph({
     bidirectional: true, alignment: AlignmentType.JUSTIFIED,
     spacing: { after: 130, line: 288 },
@@ -75,7 +97,7 @@ function letterItem(letter, text, level = 2) {
     bidirectional: true, alignment: AlignmentType.JUSTIFIED,
     spacing: { after: 120, line: 288 },
     indent: { start: START[level] || 1191, hanging: 567 },
-    children: [r('(' + letter + ')\u00A0\u00A0'), r(text)],
+    children: [r('(' + letter + ')\u00A0\u00A0'), ...splitMixed(text)],
   });
 }
 
@@ -113,7 +135,7 @@ function recital(text) {
   return new Paragraph({
     bidirectional: true, alignment: AlignmentType.JUSTIFIED,
     spacing: { after: 110, line: 288 }, indent: { start: 1191, hanging: 1191 },
-    children: [r('הואיל ', { bold: true }), r(text)],
+    children: [r('הואיל ', { bold: true }), ...splitMixed(text)],
   });
 }
 
@@ -122,7 +144,7 @@ function def(term, text) {
   return new Paragraph({
     bidirectional: true, alignment: AlignmentType.JUSTIFIED,
     spacing: { after: 120, line: 288 }, indent: { start: 567, hanging: 567 },
-    children: [r('"' + term + '" ', { bold: true }), r('פירושו ' + text)],
+    children: [r('"' + term + '" ', { bold: true }), ...splitMixed('פירושו ' + text)],
   });
 }
 
@@ -131,7 +153,7 @@ function p(text, o = {}) {
   return new Paragraph({
     bidirectional: true, alignment: o.align || AlignmentType.JUSTIFIED,
     spacing: { after: o.after == null ? 120 : o.after, line: 288 }, indent: o.indent,
-    children: Array.isArray(text) ? text : [r(text, o.run || {})],
+    children: Array.isArray(text) ? text : splitMixed(text, o.run || {}),
   });
 }
 
@@ -157,17 +179,46 @@ function buildDoc(children, opts = {}) {
   });
 }
 
+// Two things cannot be expressed through the docx options and are therefore
+// patched into the XML on the way out, so no build script has to remember them:
+//  1. w:bidi on the section properties. The docx library exposes no section
+//     level bidi option at all, and Word on mobile reads the section first.
+//  2. removal of an ambiguous w:jc value ("right", "left", "start", "end") from
+//     a bidi paragraph. Modern engines read "right" logically as end of line,
+//     which in Hebrew is the left edge, and flip the text. Centering and
+//     justification are unambiguous and are left untouched.
+function patchRtlXml(xml) {
+  let out = xml.replace(/<w:jc w:val="(right|left|start|end)"\/>/g, '');
+  out = out.replace(/<w:sectPr[^>]*>[\s\S]*?<\/w:sectPr>/g, (s) => {
+    if (s.includes('<w:bidi/>') || s.includes('<w:bidi ')) return s;
+    return s.includes('<w:docGrid')
+      ? s.replace('<w:docGrid', '<w:bidi/><w:docGrid')
+      : s.replace('</w:sectPr>', '<w:bidi/></w:sectPr>');
+  });
+  return out;
+}
+
 async function write(doc, path) {
   const fs = require('fs');
   const buf = await Packer.toBuffer(doc);
-  fs.writeFileSync(path, buf);
-  return buf.length;
+  let outBuf = buf;
+  try {
+    const JSZip = require('jszip');
+    const zip = await JSZip.loadAsync(buf);
+    const xml = await zip.file('word/document.xml').async('string');
+    zip.file('word/document.xml', patchRtlXml(xml));
+    outBuf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+  } catch (e) {
+    console.warn('RTL XML patch skipped (' + e.message + '). Patch w:bidi on sectPr manually before delivering.');
+  }
+  fs.writeFileSync(path, outBuf);
+  return outBuf.length;
 }
 
 module.exports = {
   Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle,
   FONT, BODY, HEAD, TITLE, PAGE,
-  r, rn, cl, clause, letterItem, h, recital, def, p, counter, heb, buildDoc, write,
+  r, rn, cl, clause, letterItem, h, recital, def, p, counter, heb, splitMixed, patchRtlXml, buildDoc, write,
 };
 
 // Tiny demo when run directly: node build_rtl_docx.js

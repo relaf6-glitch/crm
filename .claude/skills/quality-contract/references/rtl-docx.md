@@ -38,6 +38,26 @@ These are fixed defaults for every document, unless the user overrides them:
 - **Page numbers at the bottom, centered.** `buildDoc` already adds a centered
   footer field (עמוד X מתוך Y). Keep it on every document.
 
+## What the module now enforces for you
+
+Three things used to need remembering on every build and are now automatic in
+`build_rtl_docx.js`. Do not hand roll them again:
+
+- **Numerals inside Hebrew prose.** `splitMixed()` runs inside `clause()`, `p()`,
+  `recital()`, `def()` and `letterItem()`, so a plain string such as
+  `'ארבעה אחוזים (4%) מסך התרומות'` already comes out with `(4%)` in its own LTR
+  run. The token pattern must end in a digit, a percent sign or a closing
+  parenthesis, so a sentence ending period is never absorbed. Passing an array of
+  runs still works when you want manual control.
+- **`w:bidi` on the section properties.** The docx library exposes no section
+  level bidi option, so `write()` injects it into the XML on the way out.
+- **Ambiguous `w:jc`.** `write()` strips `right`, `left`, `start` and `end` from
+  every paragraph, leaving `center` and `both` untouched.
+
+`write()` needs `jszip`, which ships as a dependency of `docx`. If it cannot be
+loaded, `write()` prints a warning and skips the patch, and you must then inject
+`w:bidi` on the sectPr yourself before delivering.
+
 ## Core RTL rules for body text
 
 - Every paragraph needs `bidirectional: true`.
