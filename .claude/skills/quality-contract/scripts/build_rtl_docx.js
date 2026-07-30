@@ -53,12 +53,18 @@ function heb(i) { return _HEB[(i - 1) % _HEB.length]; }
 const START = { 1: 624, 2: 1191, 3: 1815 };
 
 // Numbered clause body. Pass the next integer from counter(): clause(n(), text).
+// `text` may be a string, or an array of runs when a numeral or parentheses must
+// sit in an LTR run of their own, for example
+// r('...ארבעה אחוזים '), rn('(4%)'), r(' מסך...').
+// Inside an RTL run parentheses mirror and a percent sign drifts, so keep any
+// such token in its own LTR run.
 function clause(num, text, level = 1, o = {}) {
+  const body = Array.isArray(text) ? text : [r(text, o.run || {})];
   return new Paragraph({
     bidirectional: true, alignment: AlignmentType.JUSTIFIED,
     spacing: { after: 130, line: 288 },
     indent: { start: START[level] || 624, hanging: 624 },
-    children: [rn(String(num)), r('.\u00A0\u00A0'), r(text, o.run || {})],
+    children: [rn(String(num)), r('.\u00A0\u00A0'), ...body],
   });
 }
 

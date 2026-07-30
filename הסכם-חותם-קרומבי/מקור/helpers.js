@@ -15,12 +15,14 @@ function hh(text) {
 // סעיף ממוספר: המספר לפני גוף הסעיף.
 // הספרות בריצת LTR נפרדת, והנקודה והרווחים בריצת RTL, כדי שהנקודה תישאר
 // דבוקה למספר ותוצג אחריו ולא לפניו.
+// text יכול להיות מלל, או מערך ריצות, כשצריך מספר או סוגריים בריצת LTR נפרדת.
 function numClause(num, text, bold = false) {
+  const body = Array.isArray(text) ? text : [r(text, { bold })];
   return new Paragraph({
     bidirectional: true, alignment: AlignmentType.JUSTIFIED,
     spacing: { after: 130, line: 288 },
     indent: { start: 624, hanging: 624 },
-    children: [rn(String(num)), r('.  '), r(text, { bold })],
+    children: [rn(String(num)), r('.  '), ...body],
   });
 }
 
